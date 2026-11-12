@@ -1,0 +1,276 @@
+mport tkinter as tk
+from tkinter import ttk
+from password_analyzer import analyze_password
+
+class PasswordAnalyzerGUI:
+def init(self, root):
+self.root = root
+self.root.title("Password Strength Analyzer")
+self.root.geometry("620x690")
+self.root.minsize(520, 600)
+self.root.configure(bg="#f4f6f9")
+
+    self.bg = "#f4f6f9"
+    self.navy = "#172554"
+    self.blue = "#2563eb"
+
+    main = tk.Frame(
+        root, bg=self.bg, padx=25, pady=20
+    )
+    main.pack(fill="both", expand=True)
+
+    # Heading
+    tk.Label(
+        main,
+        text="Password Strength Analyzer",
+        font=("Arial", 19, "bold"),
+        bg=self.bg,
+        fg=self.navy
+    ).pack(pady=(0, 8))
+
+    tk.Label(
+        main,
+        text="Evaluate password strength and identify weaknesses",
+        font=("Arial", 10),
+        bg=self.bg,
+        fg="#475569"
+    ).pack(pady=(0, 22))
+
+    # Password entry
+    tk.Label(
+        main,
+        text="Enter a test password:",
+        font=("Arial", 11, "bold"),
+        bg=self.bg
+    ).pack(anchor="w")
+
+    self.password_entry = ttk.Entry(
+        main, show="*", font=("Arial", 12)
+    )
+    self.password_entry.pack(fill="x", pady=10)
+
+    self.show_password = tk.BooleanVar(value=False)
+
+    ttk.Checkbutton(
+        main,
+        text="Show password",
+        variable=self.show_password,
+        command=self.toggle_password
+    ).pack(anchor="w")
+
+    # Analyze button
+    tk.Button(
+        main,
+        text="Analyze Password",
+        command=self.analyze,
+        bg=self.blue,
+        fg="white",
+        activebackground="#1d4ed8",
+        font=("Arial", 11, "bold"),
+        relief="flat",
+        pady=11,
+        cursor="hand2"
+    ).pack(fill="x", pady=(18, 20))
+
+    # Strength section
+    self.strength_label = tk.Label(
+        main,
+        text="Strength: Not evaluated",
+        font=("Arial", 14, "bold"),
+        bg=self.bg,
+        fg="#334155"
+    )
+    self.strength_label.pack(pady=(0, 12))
+
+    # Custom colour-changing progress bar
+    self.progress_canvas = tk.Canvas(
+        main,
+        height=22,
+        bg="#e5e7eb",
+        highlightthickness=0
+    )
+    self.progress_canvas.pack(fill="x", pady=(0, 20))
+
+    self.progress_canvas.bind(
+        "<Configure>",
+        self.resize_progress
+    )
+
+    self.current_score = 0
+    self.current_color = "#e5e7eb"
+
+    # Security checks heading
+    tk.Label(
+        main,
+        text="Security Checks",
+        font=("Arial", 12, "bold"),
+        bg=self.bg,
+        fg=self.navy
+    ).pack(anchor="w", pady=(0, 8))
+
+    self.checks_text = tk.Text(
+        main,
+        height=7,
+        font=("Consolas", 10),
+        wrap="word",
+        bg="white",
+        fg="#1e293b",
+        padx=12,
+        pady=10,
+        relief="solid",
+        borderwidth=1,
+        state="disabled"
+    )
+    self.checks_text.pack(fill="x", pady=(0, 15))
+
+    # Recommendations heading
+    tk.Label(
+        main,
+        text="Recommendations",
+        font=("Arial", 12, "bold"),
+        bg=self.bg,
+        fg=self.navy
+    ).pack(anchor="w", pady=(0, 8))
+
+    self.recommendations_text = tk.Text(
+        main,
+        height=6,
+        font=("Arial", 10),
+        wrap="word",
+        bg="white",
+        fg="#1e293b",
+        padx=12,
+        pady=10,
+        relief="solid",
+        borderwidth=1,
+        state="disabled"
+    )
+    self.recommendations_text.pack(
+        fill="both", expand=True
+    )
+
+    # Footer
+    tk.Label(
+        main,
+        text=(
+            "Educational tool only. "
+            "A high score does not guarantee security."
+        ),
+        font=("Arial", 9),
+        bg=self.bg,
+        fg="#64748b"
+    ).pack(pady=(12, 0))
+
+    self.password_entry.focus_set()
+
+def toggle_password(self):
+    if self.show_password.get():
+        self.password_entry.config(show="")
+    else:
+        self.password_entry.config(show="*")
+
+def resize_progress(self, event=None):
+    self.draw_progress(
+        self.current_score,
+        self.current_color
+    )
+
+def draw_progress(self, score, color):
+    self.current_score = score
+    self.current_color = color
+
+    self.progress_canvas.delete("all")
+
+    width = self.progress_canvas.winfo_width()
+    height = self.progress_canvas.winfo_height()
+
+    # Background
+    self.progress_canvas.create_rectangle(
+        0, 0, width, height,
+        fill="#e5e7eb",
+        outline=""
+    )
+
+    # Coloured strength indicator
+    filled_width = width * (score / 5)
+
+    if filled_width > 0:
+        self.progress_canvas.create_rectangle(
+            0, 0, filled_width, height,
+            fill=color,
+            outline=""
+        )
+
+def update_text(self, widget, content):
+    widget.config(state="normal")
+    widget.delete("1.0", tk.END)
+    widget.insert(tk.END, content)
+    widget.config(state="disabled")
+
+def analyze(self):
+    password = self.password_entry.get()
+
+    if not password:
+        self.strength_label.config(
+            text="Please enter a test password",
+            fg="#dc2626"
+        )
+        self.draw_progress(0, "#e5e7eb")
+        self.update_text(self.checks_text, "")
+        self.update_text(
+            self.recommendations_text, ""
+        )
+        return
+
+    strength, score, checks, suggestions = (
+        analyze_password(password)
+    )
+
+    colors = {
+        "Weak": "#dc2626",
+        "Moderate": "#f59e0b",
+        "Strong": "#16a34a"
+    }
+
+    color = colors[strength]
+
+    # Update label and progress bar
+    self.strength_label.config(
+        text=f"Strength: {strength} ({score}/5)",
+        fg=color
+    )
+
+    self.draw_progress(score, color)
+
+    # Display security checks
+    checks_output = ""
+
+    for check, passed in checks.items():
+        status = "PASS" if passed else "FAIL"
+        checks_output += f"[{status}] {check}\n"
+
+    self.update_text(
+        self.checks_text, checks_output
+    )
+
+    # Display recommendations
+    if suggestions:
+        recommendations_output = "\n".join(
+            f"- {item}" for item in suggestions
+        )
+    else:
+        recommendations_output = (
+            "No basic weaknesses identified."
+        )
+
+    self.update_text(
+        self.recommendations_text,
+        recommendations_output
+    )
+
+    # Clear entered password
+    self.password_entry.delete(0, tk.END)
+if name == "main":
+root = tk.Tk()
+app = PasswordAnalyzerGUI(root)
+root.mainloop()
